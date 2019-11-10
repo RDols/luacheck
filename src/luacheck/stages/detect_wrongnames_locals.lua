@@ -50,7 +50,7 @@ local function detect_unused_local(chstate, var)
         if value.type == "var" then
           detect_startcase_not_lower(chstate, value, "703")
         elseif value.type == "arg" then
-          detect_startcase_not_upper(chstate, value, "702")
+          detect_startcase_not_lower(chstate, value, "702")
         elseif value.type == "loop" then
           if is_variable_index(value) then
             detect_startcase_not_lower(chstate, value, "704")
