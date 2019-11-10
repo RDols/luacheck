@@ -11,3 +11,7 @@ build/bin/*
 package
 scripts/UnicodeData-*
 docsrc/.doctrees
+
+src/luacheck/main\.lua\.c
+
+src/LuaCheck\.exe
