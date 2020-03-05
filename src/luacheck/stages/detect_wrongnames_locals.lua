@@ -1,4 +1,4 @@
-local utils = require "luacheck.utils"
+--local utils = require "luacheck.utils"
 
 local stage = {}
 
@@ -8,7 +8,10 @@ stage.warnings = {
    ["703"] = {message_format = "local variable {name!} should be in {case} camelcase", fields = {"name", "case"}},
    ["704"] = {message_format = "pair/ipair iterator {name!} should be in {case} camelcase", fields = {"name", "case"}},
    ["705"] = {message_format = "pair/ipair value {name!} should be in {case} camelcase", fields = {"name", "case"}},
-   ["706"] = {message_format = "for loop variable {name!} should be in {case} camelcase", fields = {"name", "case"}}
+   ["706"] = {message_format = "for loop variable {name!} should be in {case} camelcase", fields = {"name", "case"}},
+   ["354"] = {message_format = "mutating pair/ipair iterator {name!}", fields = {"name"}},
+   ["355"] = {message_format = "mutating pair/ipair value {name!}", fields = {"name"}},
+   ["356"] = {message_format = "mutating for loop variable {name!}", fields = {"name"}}
 }
 
 local function detect_startcase_not_upper(chstate, value, code)
@@ -42,8 +45,8 @@ end
 
 local function detect_unused_local(chstate, var)
    if is_function_var(var) then
-    local value = var.values[2] or var.values[1]
-    detect_startcase_not_upper(chstate, value, "701")
+      local value = var.values[2] or var.values[1]
+      detect_startcase_not_upper(chstate, value, "701")
    elseif #var.values >= 1 then
       local value = var.values[1]
       if value.var.name ~= '_' and value.var.name ~= 'self' then
@@ -87,9 +90,42 @@ local function detect_wrongnames_locals(chstate)
    end
 end
 
+local function detect_mutating_loop_variables_in_assignment(chstate, declaration, assignment)
+   if #declaration.values == 0 then return end
+
+   if assignment.var.type == "loopi" then
+      chstate:warn_value("356", assignment, {})
+   elseif assignment.var.type == "loop" then
+      if is_variable_index(declaration.values[1]) then
+        chstate:warn_value("354", assignment, {})
+      else
+        chstate:warn_value("355", assignment, {})
+      end
+   end
+end
+
+local function detect_mutating_loop_variables_in_statement(chstate, statement)
+   if statement.tag ~= "Set" then return end
+
+-- Niet eens met nam lhs, en rhs. Binnen item heeft dit en andere betekenis
+-- ook is lhs, niet lhs, maar de declaratie, en rhs het gebruikt (en dus de echte lhs).
+-- de echte rhs zit weer ergens anders....
+   for declaration, assignment in pairs(statement.set_variables) do
+      detect_mutating_loop_variables_in_assignment(chstate, declaration, assignment)
+   end
+end
+
+local function detect_mutating_loop_variables(chstate)
+   for _, line in ipairs(chstate.lines) do
+      for _, statement in ipairs(line.items) do
+         detect_mutating_loop_variables_in_statement(chstate, statement)
+      end
+   end
+end
 
 function stage.run(chstate)
    detect_wrongnames_locals(chstate)
+   detect_mutating_loop_variables(chstate)
 end
 
 return stage
