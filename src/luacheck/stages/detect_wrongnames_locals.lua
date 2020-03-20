@@ -107,9 +107,6 @@ end
 local function detect_mutating_loop_variables_in_statement(chstate, statement)
    if statement.tag ~= "Set" then return end
 
--- Niet eens met nam lhs, en rhs. Binnen item heeft dit en andere betekenis
--- ook is lhs, niet lhs, maar de declaratie, en rhs het gebruikt (en dus de echte lhs).
--- de echte rhs zit weer ergens anders....
    for declaration, assignment in pairs(statement.set_variables) do
       detect_mutating_loop_variables_in_assignment(chstate, declaration, assignment)
    end
