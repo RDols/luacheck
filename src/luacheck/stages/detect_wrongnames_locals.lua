@@ -14,8 +14,14 @@ stage.warnings = {
    ["356"] = {message_format = "mutating for loop variable {name!}", fields = {"name"}}
 }
 
+local upperA = 65
+local upperZ = 90
+local lowerA = 97
+local lowerZ = 122
+local underscore = 95
+
 local function detect_startcase_not_upper(chstate, value, code)
-    if value.var.name:byte(1) < 65 or value.var.name:byte(1) > 90 then
+    if value.var.name:byte(1) < upperA or value.var.name:byte(1) > upperZ then
       local warning = {}
       warning.case = "upper"
       chstate:warn_value(code, value, warning)
@@ -23,7 +29,15 @@ local function detect_startcase_not_upper(chstate, value, code)
 end
 
 local function detect_startcase_not_lower(chstate, value, code)
-    if value.var.name:byte(1) < 97 or value.var.name:byte(1) > 122 then
+    if value.var.name:byte(1) < lowerA or value.var.name:byte(1) > lowerZ then
+      local warning = {}
+      warning.case = "lower"
+      chstate:warn_value(code, value, warning)
+    end
+end
+
+local function detect_startcase_not_lower_arg(chstate, value, code)
+    if (value.var.name:byte(1) < lowerA or value.var.name:byte(1) > lowerZ) and value.var.name:byte(1) ~= underscore and value.var.name ~= "..." then
       local warning = {}
       warning.case = "lower"
       chstate:warn_value(code, value, warning)
@@ -53,7 +67,7 @@ local function detect_unused_local(chstate, var)
         if value.type == "var" then
           detect_startcase_not_lower(chstate, value, "703")
         elseif value.type == "arg" then
-          detect_startcase_not_lower(chstate, value, "702")
+          detect_startcase_not_lower_arg(chstate, value, "702")
         elseif value.type == "loop" then
           if is_variable_index(value) then
             detect_startcase_not_lower(chstate, value, "704")

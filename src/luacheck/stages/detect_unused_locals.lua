@@ -67,6 +67,10 @@ local type_codes = {
 }
 
 local function warn_unused_var(chstate, value, is_useless)
+   if value.var.type == "arg" and (value.var.name:sub(1, 1) == "_" or value.var.name == "parent" or value.var.name == "event") then
+      return
+   end
+
    chstate:warn_value("21" .. type_codes[value.var.type], value, {
       secondary = is_secondary(value) or nil,
       func = value.type == "func" or nil,
